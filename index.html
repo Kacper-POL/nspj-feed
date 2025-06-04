@@ -2,34 +2,41 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>RSS NSPJ</title>
+  <title>Test RSS</title>
 </head>
 <body>
-  <h1>Aktualności z NSPJ</h1>
+  <h1>Aktualności</h1>
   <div id="feed">Ładowanie...</div>
 
   <script>
-    fetch("https://corsproxy.io/?https://nspj.bydgoszcz.pl/category/news-nspj/feed/")
-      .then(r => r.text())
+    const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
+    const proxyUrl = "https://corsproxy.io/?" + feedUrl;
+
+    fetch(proxyUrl)
+      .then(res => res.ok ? res.text() : Promise.reject("Błąd sieci"))
       .then(str => {
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(str, "application/xml");
+        const xml = new window.DOMParser().parseFromString(str, "text/xml");
         const items = xml.querySelectorAll("item");
-        const container = document.getElementById("feed");
-        let html = "";
+        const feedDiv = document.getElementById("feed");
+        feedDiv.innerHTML = "";
+
+        if (items.length === 0) {
+          feedDiv.innerText = "Brak aktualności.";
+          return;
+        }
 
         items.forEach((item, i) => {
-          if (i >= 5) return;
-          const title = item.querySelector("title").textContent;
-          const link = item.querySelector("link").textContent;
-          html += `<p><a href="${link}" target="_blank">${title}</a></p>`;
+          if (i >= 5) return; // tylko 5 postów
+          const title = item.querySelector("title")?.textContent || "Bez tytułu";
+          const link = item.querySelector("link")?.textContent || "#";
+          const el = document.createElement("div");
+          el.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
+          feedDiv.appendChild(el);
         });
-
-        container.innerHTML = html || "Brak aktualności.";
       })
-      .catch(error => {
-        document.getElementById("feed").textContent = "Nie udało się pobrać aktualności.";
-        console.error(error);
+      .catch(err => {
+        document.getElementById("feed").innerText = "Nie udało się pobrać.";
+        console.error(err);
       });
   </script>
 </body>
