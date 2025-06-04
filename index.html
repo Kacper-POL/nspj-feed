@@ -2,45 +2,34 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Aktualności NSPJ</title>
+  <title>RSS NSPJ</title>
 </head>
 <body>
   <h1>Aktualności z NSPJ</h1>
   <div id="feed">Ładowanie...</div>
 
   <script>
-    const proxyUrl = "https://api.allorigins.win/get?url=" +
-      encodeURIComponent("https://nspj.bydgoszcz.pl/category/news-nspj/feed/");
-
-    fetch(proxyUrl)
-      .then(response => {
-        if (response.ok) return response.json();
-        throw new Error("Nie udało się pobrać danych.");
-      })
-      .then(data => {
+    fetch("https://corsproxy.io/?https://nspj.bydgoszcz.pl/category/news-nspj/feed/")
+      .then(r => r.text())
+      .then(str => {
         const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, "text/xml");
+        const xml = parser.parseFromString(str, "application/xml");
         const items = xml.querySelectorAll("item");
-        const feed = document.getElementById("feed");
-
-        if (items.length === 0) {
-          feed.innerText = "Brak aktualności.";
-          return;
-        }
-
+        const container = document.getElementById("feed");
         let html = "";
+
         items.forEach((item, i) => {
           if (i >= 5) return;
-          const title = item.querySelector("title")?.textContent || "Bez tytułu";
-          const link = item.querySelector("link")?.textContent || "#";
+          const title = item.querySelector("title").textContent;
+          const link = item.querySelector("link").textContent;
           html += `<p><a href="${link}" target="_blank">${title}</a></p>`;
         });
 
-        feed.innerHTML = html;
+        container.innerHTML = html || "Brak aktualności.";
       })
-      .catch(err => {
-        document.getElementById("feed").innerText = "Błąd ładowania.";
-        console.error(err);
+      .catch(error => {
+        document.getElementById("feed").textContent = "Nie udało się pobrać aktualności.";
+        console.error(error);
       });
   </script>
 </body>
