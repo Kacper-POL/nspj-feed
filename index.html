@@ -2,76 +2,41 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Aktualności z NSPJ</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 1em;
-      background: #fff;
-      color: #222;
-      max-width: 600px;
-      margin: auto;
-    }
-    h1 {
-      text-align: center;
-      color: #a00;
-    }
-    .post {
-      border-bottom: 1px solid #ddd;
-      margin-bottom: 1em;
-      padding-bottom: 1em;
-    }
-    .post a {
-      font-size: 1.1em;
-      color: #0645ad;
-      text-decoration: none;
-    }
-    .post .date {
-      font-size: 0.9em;
-      color: #888;
-    }
-  </style>
+  <title>Test RSS</title>
 </head>
 <body>
-  <h1>Aktualności z NSPJ</h1>
-  <div id="feed">Ładowanie...</div>
+  <h1>Test RSS z NSPJ</h1>
+  <div id="feed">Ładowanie…</div>
 
   <script>
-    const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
-    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(feedUrl);
+    const url = "https://corsproxy.io/?https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
 
-    fetch(proxyUrl)
+    fetch(url)
       .then(response => response.text())
       .then(str => {
         const parser = new DOMParser();
         const xml = parser.parseFromString(str, "application/xml");
         const items = xml.querySelectorAll("item");
         const feed = document.getElementById("feed");
-        feed.innerHTML = "";
 
         if (items.length === 0) {
-          feed.textContent = "Brak aktualności.";
+          feed.innerText = "Brak aktualności.";
           return;
         }
 
+        let html = "";
         items.forEach((item, i) => {
           if (i >= 5) return;
-          const title = item.querySelector("title")?.textContent;
-          const link = item.querySelector("link")?.textContent;
-          const date = item.querySelector("pubDate")?.textContent;
-
-          const post = document.createElement("div");
-          post.className = "post";
-          post.innerHTML = `
-            <a href="${link}" target="_blank">${title}</a><br>
-            <span class="date">${new Date(date).toLocaleDateString("pl-PL")}</span>
-          `;
-          feed.appendChild(post);
+          const title = item.querySelector("title")?.textContent || "Bez tytułu";
+          const link = item.querySelector("link")?.textContent || "#";
+          html += `<p><a href="${link}" target="_blank">${title}</a></p>`;
         });
+
+        feed.innerHTML = html;
       })
-      .catch(error => {
-        document.getElementById("feed").textContent = "Nie udało się pobrać aktualności.";
-        console.error(error);
+      .catch(err => {
+        document.getElementById("feed").innerText = "Błąd ładowania danych.";
+        console.error("Błąd pobierania RSS:", err);
       });
   </script>
 </body>
