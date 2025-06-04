@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -44,23 +43,46 @@
     <div id="feed">Ładowanie...</div>
 
     <script>
-       const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
-const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(feedUrl);
+        const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
+        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(feedUrl);
 
-fetch(proxyUrl)
-    .then(response => {
-        if (response.ok) return response.json();
-        throw new Error('Błąd sieci');
-    })
-    .then(data => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-        // reszta kodu działa jak wcześniej...
-    })
-    .catch(err => {
-        document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
-        console.error(err);
-    });
+        fetch(proxyUrl)
+            .then(response => {
+                if (!response.ok) throw new Error("Błąd sieci");
+                return response.json();
+            })
+            .then(data => {
+                console.log("Dane pobrane z RSS:", data); // 👈 Dla debugowania
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                const items = xmlDoc.querySelectorAll("item");
+                const feed = document.getElementById("feed");
+                feed.innerHTML = "";
+
+                if (items.length === 0) {
+                    feed.innerText = "Brak aktualności.";
+                    return;
+                }
+
+                items.forEach((item, index) => {
+                    if (index >= 5) return; // Max 5 postów
+                    const title = item.querySelector("title")?.textContent || "Bez tytułu";
+                    const link = item.querySelector("link")?.textContent || "#";
+                    const pubDate = item.querySelector("pubDate")?.textContent || "";
+
+                    const post = document.createElement("div");
+                    post.className = "post";
+                    post.innerHTML = `
+                        <div class="date">${pubDate}</div>
+                        <a href="${link}" target="_blank">${title}</a>
+                    `;
+                    feed.appendChild(post);
+                });
+            })
+            .catch(err => {
+                document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
+                console.error("Błąd pobierania lub parsowania RSS:", err);
+            });
     </script>
 </body>
 </html>
