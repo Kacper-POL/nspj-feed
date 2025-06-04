@@ -44,8 +44,8 @@
 
     <script>
         const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
-        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(feedUrl);
-
+        const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
+        
         fetch(proxyUrl)
             .then(response => {
                 if (!response.ok) throw new Error("Błąd sieci");
