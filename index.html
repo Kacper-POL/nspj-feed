@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktualności z NSPJ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .post {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+        }
+        .post:last-child {
+            border-bottom: none;
+        }
+        .date {
+            font-size: 0.9em;
+            color: #777;
+        }
+        a {
+            text-decoration: none;
+            color: #0056b3;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>📰 Aktualności z NSPJ Bydgoszcz</h1>
+    <div id="feed"></div>
+
+    <script>
+        const parser = new DOMParser();
+        const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
+
+        fetch(feedUrl)
+            .then(response => response.text())
+            .then(str => parser.parseFromString(str, "text/xml"))
+            .then(data => {
+                const items = data.querySelectorAll("item");
+                const feedDiv = document.getElementById("feed");
+                for (let i = 0; i < Math.min(5, items.length); i++) {
+                    const item = items[i];
+                    const title = item.querySelector("title").textContent;
+                    const link = item.querySelector("link").textContent;
+                    const pubDate = new Date(item.querySelector("pubDate").textContent);
+                    const formattedDate = pubDate.toLocaleDateString("pl-PL");
+
+                    const div = document.createElement("div");
+                    div.className = "post";
+                    div.innerHTML = `<div class="date">${formattedDate}</div><a href="${link}" target="_blank">${title}</a>`;
+                    feedDiv.appendChild(div);
+                }
+            })
+            .catch(err => {
+                document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
