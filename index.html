@@ -1,33 +1,80 @@
-<script>
-    const parser = new DOMParser();
-    const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
-    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(feedUrl);
 
-    fetch(proxyUrl)
-        .then(response => {
-            if (response.ok) return response.text();
-            throw new Error('Network response was not ok.');
-        })
-        .then(str => {
-            const xmlDoc = parser.parseFromString(str, "text/xml");
-            const items = xmlDoc.querySelectorAll("item");
-            const feedDiv = document.getElementById("feed");
-            feedDiv.innerHTML = ""; // wyczyść "Ładowanie..."
-            for (let i = 0; i < Math.min(5, items.length); i++) {
-                const item = items[i];
-                const title = item.querySelector("title").textContent;
-                const link = item.querySelector("link").textContent;
-                const pubDate = new Date(item.querySelector("pubDate").textContent);
-                const formattedDate = pubDate.toLocaleDateString("pl-PL");
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Aktualności z NSPJ Bydgoszcz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f8f8;
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #a00;
+        }
+        .post {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post a {
+            font-size: 1.1em;
+            color: #0645ad;
+            text-decoration: none;
+        }
+        .post a:hover {
+            text-decoration: underline;
+        }
+        .date {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aktualności z NSPJ Bydgoszcz</h1>
+    <div id="feed">Ładowanie...</div>
 
-                const div = document.createElement("div");
-                div.className = "post";
-                div.innerHTML = `<div class="date">${formattedDate}</div><a href="${link}" target="_blank">${title}</a>`;
-                feedDiv.appendChild(div);
-            }
-        })
-        .catch(err => {
-            document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
-            console.error(err);
-        });
-</script>
+    <script>
+        const parser = new DOMParser();
+        const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
+        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(feedUrl);
+
+        fetch(proxyUrl)
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                const items = xmlDoc.querySelectorAll("item");
+                const feedDiv = document.getElementById("feed");
+                feedDiv.innerHTML = ""; // wyczyść "Ładowanie..."
+                for (let i = 0; i < Math.min(5, items.length); i++) {
+                    const item = items[i];
+                    const title = item.querySelector("title").textContent;
+                    const link = item.querySelector("link").textContent;
+                    const pubDate = new Date(item.querySelector("pubDate").textContent);
+                    const formattedDate = pubDate.toLocaleDateString("pl-PL");
+
+                    const div = document.createElement("div");
+                    div.className = "post";
+                    div.innerHTML = `<div class="date">${formattedDate}</div><a href="${link}" target="_blank">${title}</a>`;
+                    feedDiv.appendChild(div);
+                }
+            })
+            .catch(err => {
+                document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
