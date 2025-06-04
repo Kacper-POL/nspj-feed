@@ -2,20 +2,24 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Test RSS</title>
+  <title>Aktualności NSPJ</title>
 </head>
 <body>
-  <h1>Test RSS z NSPJ</h1>
-  <div id="feed">Ładowanie…</div>
+  <h1>Aktualności z NSPJ</h1>
+  <div id="feed">Ładowanie...</div>
 
   <script>
-    const url = "https://corsproxy.io/?https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
+    const proxyUrl = "https://api.allorigins.win/get?url=" +
+      encodeURIComponent("https://nspj.bydgoszcz.pl/category/news-nspj/feed/");
 
-    fetch(url)
-      .then(response => response.text())
-      .then(str => {
+    fetch(proxyUrl)
+      .then(response => {
+        if (response.ok) return response.json();
+        throw new Error("Nie udało się pobrać danych.");
+      })
+      .then(data => {
         const parser = new DOMParser();
-        const xml = parser.parseFromString(str, "application/xml");
+        const xml = parser.parseFromString(data.contents, "text/xml");
         const items = xml.querySelectorAll("item");
         const feed = document.getElementById("feed");
 
@@ -35,8 +39,8 @@
         feed.innerHTML = html;
       })
       .catch(err => {
-        document.getElementById("feed").innerText = "Błąd ładowania danych.";
-        console.error("Błąd pobierania RSS:", err);
+        document.getElementById("feed").innerText = "Błąd ładowania.";
+        console.error(err);
       });
   </script>
 </body>
