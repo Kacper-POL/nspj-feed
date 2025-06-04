@@ -1,87 +1,43 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <title>Aktualności z NSPJ Bydgoszcz</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f8f8f8;
-            color: #333;
-            padding: 20px;
-            max-width: 600px;
-            margin: auto;
-        }
-        h1 {
-            text-align: center;
-            color: #a00;
-        }
-        .post {
-            background: #fff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .post a {
-            font-size: 1.1em;
-            color: #0645ad;
-            text-decoration: none;
-        }
-        .post a:hover {
-            text-decoration: underline;
-        }
-        .date {
-            font-size: 0.9em;
-            color: #888;
-            margin-bottom: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Test RSS</title>
 </head>
 <body>
-    <h1>Aktualności z NSPJ Bydgoszcz</h1>
-    <div id="feed">Ładowanie...</div>
+  <h1>Aktualności</h1>
+  <div id="feed">Ładowanie...</div>
 
-    <script>
-        const feedUrl = "https://nspj.bydgoszcz.pl/category/news-nspj/feed/";
-        const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
-        
-        fetch(proxyUrl)
-            .then(response => {
-                if (!response.ok) throw new Error("Błąd sieci");
-                return response.text();
-            })
-            .then(str => {
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(str, "text/xml");
-                const items = xmlDoc.querySelectorAll("item");
-                const feed = document.getElementById("feed");
-                feed.innerHTML = "";
+  <script>
+    const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
+    const proxyUrl = "https://corsproxy.io/?" + feedUrl;
 
-                if (items.length === 0) {
-                    feed.innerText = "Brak aktualności.";
-                    return;
-                }
+    fetch(proxyUrl)
+      .then(res => res.ok ? res.text() : Promise.reject("Błąd sieci"))
+      .then(str => {
+        const xml = new window.DOMParser().parseFromString(str, "text/xml");
+        const items = xml.querySelectorAll("item");
+        const feedDiv = document.getElementById("feed");
+        feedDiv.innerHTML = "";
 
-                items.forEach((item, index) => {
-                    if (index >= 5) return;
-                    const title = item.querySelector("title")?.textContent || "Bez tytułu";
-                    const link = item.querySelector("link")?.textContent || "#";
-                    const pubDate = item.querySelector("pubDate")?.textContent || "";
+        if (items.length === 0) {
+          feedDiv.innerText = "Brak aktualności.";
+          return;
+        }
 
-                    const post = document.createElement("div");
-                    post.className = "post";
-                    post.innerHTML = `
-                        <div class="date">${pubDate}</div>
-                        <a href="${link}" target="_blank">${title}</a>
-                    `;
-                    feed.appendChild(post);
-                });
-            })
-            .catch(err => {
-                document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
-                console.error("Błąd pobierania lub parsowania RSS:", err);
-            });
-    </script>
+        items.forEach((item, i) => {
+          if (i >= 5) return; // tylko 5 postów
+          const title = item.querySelector("title")?.textContent || "Bez tytułu";
+          const link = item.querySelector("link")?.textContent || "#";
+          const el = document.createElement("div");
+          el.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
+          feedDiv.appendChild(el);
+        });
+      })
+      .catch(err => {
+        document.getElementById("feed").innerText = "Nie udało się pobrać.";
+        console.error(err);
+      });
+  </script>
 </body>
 </html>
