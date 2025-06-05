@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>NSPJ Sidebar</title>
+  <title>Aktualności NSPJ</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -21,21 +21,25 @@
       text-align: left;
     }
     .latest img {
-      max-width: 60px;
+      width: 80%;
       height: auto;
       margin-bottom: 6px;
       border-radius: 4px;
       display: block;
     }
-    .latest h2 {
+    .latest a {
       font-size: 1em;
-      margin: 6px 0 4px;
-      line-height: 1.2;
+      color: #0645ad;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .latest a:hover {
+      text-decoration: underline;
     }
     .latest .date {
       font-size: 0.75em;
       color: #888;
-      margin-bottom: 6px;
+      margin-left: 4px;
     }
     .latest .excerpt {
       font-size: 0.85em;
@@ -95,9 +99,7 @@
           const title0 = first.querySelector("title")?.textContent || "Bez tytułu";
           const link0 = first.querySelector("link")?.textContent || "#";
           const pubDate0 = first.querySelector("pubDate")?.textContent || "";
-          const date0 = pubDate0
-            ? new Date(pubDate0).toLocaleDateString("pl-PL")
-            : "";
+          const date0 = pubDate0 ? new Date(pubDate0).toLocaleDateString("pl-PL") : "";
           const content0 = first.getElementsByTagName("content:encoded")[0]?.textContent || "";
           let imgUrl0 = null;
           const imgMatch0 = content0.match(/<img[^>]+src="([^">]+)"/i);
@@ -114,8 +116,8 @@
           if (imgUrl0) {
             latestHTML += '<img src="' + imgUrl0 + '" alt="Miniatura">';
           }
-          latestHTML += '<h2><a href="' + link0 + '" target="_blank">' + title0 + '</a></h2>';
-          latestHTML += '<div class="date">' + date0 + '</div>';
+          latestHTML += '<div><a href="' + link0 + '" target="_blank">' + title0 + '</a>';
+          latestHTML += ' <span class="date">(' + date0 + ')</span></div>';
           latestHTML += '<div class="excerpt">' + excerpt0 + '</div>';
           latestHTML += '</div>';
 
@@ -126,9 +128,7 @@
             const l = item.querySelector("link")?.textContent || "#";
             const pd = item.querySelector("pubDate")?.textContent || "";
             const d = pd ? new Date(pd).toLocaleDateString("pl-PL") : "";
-            olderHTML +=
-              '<a href="' + l + '" target="_blank">' + t +
-              '<span class="date"> (' + d + ')</span></a>';
+            olderHTML += '<a href="' + l + '" target="_blank">' + t + ' <span class="date">(' + d + ')</span></a>';
           });
           olderHTML += '</div>';
 
