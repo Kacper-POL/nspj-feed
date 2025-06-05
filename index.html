@@ -2,36 +2,51 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Aktualności z NSPJ</title>
+  <title>Aktualności NSPJ</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #fff;
+      background: #f4f4f4;
       color: #333;
-      padding: 10px;
-      max-width: 500px;
+      padding: 20px;
+      max-width: 600px;
       margin: auto;
     }
-    h1 {
+    .latest {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .latest img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+    .latest h2 {
       font-size: 1.2em;
-      text-align: center;
-      color: #a00;
-      margin-bottom: 1em;
+      margin: 0 0 5px;
     }
-    .post {
-      margin-bottom: 1em;
+    .latest .date {
+      font-size: 0.9em;
+      color: #888;
+      margin-bottom: 10px;
     }
-    .post a {
+    .older-posts a {
+      display: block;
+      margin-bottom: 6px;
       color: #0645ad;
       text-decoration: none;
-      font-weight: bold;
     }
-    .post a:hover {
+    .older-posts a:hover {
       text-decoration: underline;
     }
-    .date {
-      font-size: 0.9em;
-      color: #777;
+    .older-posts .date {
+      font-size: 0.8em;
+      color: #999;
+      margin-left: 6px;
     }
   </style>
 </head>
@@ -56,21 +71,37 @@
           return;
         }
 
-        items.forEach((item, i) => {
-          if (i >= 5) return; // tylko 5 postów
+        // Najnowszy post
+        const first = items[0];
+        const title = first.querySelector("title")?.textContent || "Bez tytułu";
+        const link = first.querySelector("link")?.textContent || "#";
+        const pubDate = new Date(first.querySelector("pubDate")?.textContent).toLocaleDateString();
+        const content = first.getElementsByTagName("content:encoded")[0]?.textContent || "";
+        const imgMatch = content.match(/<img[^>]+src=\"([^\"]+)\"/);
+        const imageUrl = imgMatch ? imgMatch[1] : null;
+
+        const latestHTML = `
+          <div class="latest">
+            ${imageUrl ? `<img src="${imageUrl}" alt="Miniatura">` : ""}
+            <div class="date">${pubDate}</div>
+            <h2><a href="${link}" target="_blank">${title}</a></h2>
+            <div class="excerpt">${content.slice(0, 150)}...</div>
+          </div>
+        `;
+        feedDiv.innerHTML += latestHTML;
+
+        // Starsze posty
+        const olderHTML = Array.from(items).slice(1, 6).map(item => {
           const title = item.querySelector("title")?.textContent || "Bez tytułu";
           const link = item.querySelector("link")?.textContent || "#";
-          const pubDate = item.querySelector("pubDate")?.textContent || "";
-          const date = pubDate ? new Date(pubDate).toLocaleDateString("pl-PL") : "";
+          const pubDate = new Date(item.querySelector("pubDate")?.textContent).toLocaleDateString();
+          return `<a href="${link}" target="_blank">${title}<span class="date"> (${pubDate})</span></a>`;
+        }).join("");
 
-          const el = document.createElement("div");
-          el.className = "post";
-          el.innerHTML = `<div class="date">${date}</div><a href="${link}" target="_blank">${title}</a>`;
-          feedDiv.appendChild(el);
-        });
+        feedDiv.innerHTML += `<div class="older-posts">${olderHTML}</div>`;
       })
       .catch(err => {
-        document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
+        document.getElementById("feed").innerText = "Nie udało się pobrać.";
         console.error(err);
       });
   </script>
