@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Aktualności NSPJ</title>
+  <title>Aktualności z NSPJ</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,40 +12,61 @@
       max-width: 600px;
       margin: auto;
     }
+    h1 {
+      font-size: 1.3em;
+      text-align: center;
+      color: #a00;
+      margin-bottom: 20px;
+    }
+    /* Styl dla najnowszego posta */
     .latest {
       background: #fff;
       padding: 15px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
     }
     .latest img {
-      max-width: 100%;
+      max-width: 100px;
       height: auto;
       margin-bottom: 10px;
-      border-radius: 6px;
+      border-radius: 4px;
     }
     .latest h2 {
       font-size: 1.2em;
-      margin: 0 0 5px;
+      margin: 10px 0 5px;
     }
     .latest .date {
       font-size: 0.9em;
       color: #888;
       margin-bottom: 10px;
     }
+    .latest .excerpt {
+      font-size: 0.95em;
+      color: #444;
+      margin-top: 5px;
+    }
+    /* Styl dla kolejnych 3 starszych postów */
+    .older-posts {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
     .older-posts a {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #0645ad;
       text-decoration: none;
+      font-weight: bold;
     }
     .older-posts a:hover {
       text-decoration: underline;
     }
     .older-posts .date {
       font-size: 0.8em;
-      color: #999;
+      color: #888;
       margin-left: 6px;
     }
   </style>
@@ -55,55 +76,73 @@
   <div id="feed">Ładowanie...</div>
 
   <script>
-    const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
-    const proxyUrl = "https://corsproxy.io/?" + feedUrl;
+    (function() {
+      const feedUrl = "https://nspj.bydgoszcz.pl/feed/";
+      const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(feedUrl);
 
-    fetch(proxyUrl)
-      .then(res => res.ok ? res.text() : Promise.reject("Błąd sieci"))
-      .then(str => {
-        const xml = new window.DOMParser().parseFromString(str, "text/xml");
-        const items = xml.querySelectorAll("item");
-        const feedDiv = document.getElementById("feed");
-        feedDiv.innerHTML = "";
+      fetch(proxyUrl)
+        .then(res => res.ok ? res.text() : Promise.reject("Błąd sieci"))
+        .then(str => {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(str, "text/xml");
+          const items = xml.querySelectorAll("item");
+          const feedDiv = document.getElementById("feed");
+          feedDiv.innerHTML = "";
 
-        if (items.length === 0) {
-          feedDiv.innerText = "Brak aktualności.";
-          return;
-        }
+          if (items.length === 0) {
+            feedDiv.innerText = "Brak aktualności.";
+            return;
+          }
 
-        // Najnowszy post
-        const first = items[0];
-        const title = first.querySelector("title")?.textContent || "Bez tytułu";
-        const link = first.querySelector("link")?.textContent || "#";
-        const pubDate = new Date(first.querySelector("pubDate")?.textContent).toLocaleDateString();
-        const content = first.getElementsByTagName("content:encoded")[0]?.textContent || "";
-        const imgMatch = content.match(/<img[^>]+src=\"([^\"]+)\"/);
-        const imageUrl = imgMatch ? imgMatch[1] : null;
+          // Najnowszy post (index 0)
+          const first = items[0];
+          const title0 = first.querySelector("title")?.textContent || "Bez tytułu";
+          const link0 = first.querySelector("link")?.textContent || "#";
+          const pubDate0 = first.querySelector("pubDate")?.textContent || "";
+          const date0 = pubDate0
+            ? new Date(pubDate0).toLocaleDateString("pl-PL")
+            : "";
+          const content0 = first.getElementsByTagName("content:encoded")[0]?.textContent || "";
+          let imgUrl0 = null;
+          const imgMatch0 = content0.match(/<img[^>]+src="([^">]+)"/i);
+          if (imgMatch0 && imgMatch0[1]) {
+            imgUrl0 = imgMatch0[1];
+          }
+          // Przycinanie opisu
+          const tmpDiv0 = document.createElement("div");
+          tmpDiv0.innerHTML = content0;
+          const textContent0 = tmpDiv0.textContent || tmpDiv0.innerText || "";
+          const excerpt0 = textContent0.trim().substring(0, 120) + "...";
 
-        const latestHTML = `
-          <div class="latest">
-            ${imageUrl ? `<img src="${imageUrl}" alt="Miniatura">` : ""}
-            <div class="date">${pubDate}</div>
-            <h2><a href="${link}" target="_blank">${title}</a></h2>
-            <div class="excerpt">${content.slice(0, 150)}...</div>
-          </div>
-        `;
-        feedDiv.innerHTML += latestHTML;
+          let latestHTML = '<div class="latest">';
+          if (imgUrl0) {
+            latestHTML += '<img src="' + imgUrl0 + '" alt="Miniatura">';
+          }
+          latestHTML += '<h2><a href="' + link0 + '" target="_blank">' + title0 + '</a></h2>';
+          latestHTML += '<div class="date">' + date0 + '</div>';
+          latestHTML += '<div class="excerpt">' + excerpt0 + '</div>';
+          latestHTML += '</div>';
 
-        // Starsze posty
-        const olderHTML = Array.from(items).slice(1, 6).map(item => {
-          const title = item.querySelector("title")?.textContent || "Bez tytułu";
-          const link = item.querySelector("link")?.textContent || "#";
-          const pubDate = new Date(item.querySelector("pubDate")?.textContent).toLocaleDateString();
-          return `<a href="${link}" target="_blank">${title}<span class="date"> (${pubDate})</span></a>`;
-        }).join("");
+          // Starsze posty (index 1-3)
+          let olderHTML = '<div class="older-posts">';
+          Array.from(items).slice(1, 4).forEach(item => {
+            const t = item.querySelector("title")?.textContent || "Bez tytułu";
+            const l = item.querySelector("link")?.textContent || "#";
+            const pd = item.querySelector("pubDate")?.textContent || "";
+            const d = pd ? new Date(pd).toLocaleDateString("pl-PL") : "";
+            olderHTML +=
+              '<a href="' + l + '" target="_blank">' + t +
+              '<span class="date"> (' + d + ')</span></a>';
+          });
+          olderHTML += '</div>';
 
-        feedDiv.innerHTML += `<div class="older-posts">${olderHTML}</div>`;
-      })
-      .catch(err => {
-        document.getElementById("feed").innerText = "Nie udało się pobrać.";
-        console.error(err);
-      });
+          feedDiv.innerHTML = latestHTML + olderHTML;
+        })
+        .catch(err => {
+          document.getElementById("feed").innerText = "Nie udało się pobrać aktualności.";
+          console.error(err);
+        });
+    })();
   </script>
 </body>
 </html>
